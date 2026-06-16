@@ -1,0 +1,1451 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ancient Stacked Pandulipi - Sacred Shlokas</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Serif+Devanagari:wght@700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-color: #080503; /* Pitch dark background */
+        --gold: #d4af37;
+        /* Authentic Palm Leaf Colors based on image_fb8b02.png */
+        --leaf-base: #df9e51;
+        --leaf-dark: #b86e24;
+        --leaf-burn: #5c2705;
+        --text-ink: #140700; /* Thick dark brown/black ink */
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: var(--bg-color);
+        color: white;
+        font-family: "Cinzel", serif;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      /* ----------------------------------------- */
+      /* SVG FILTER FOR RAGGED / TORN EDGES        */
+      /* ----------------------------------------- */
+      .svg-filters {
+        position: absolute;
+        width: 0;
+        height: 0;
+      }
+
+      /* Divine Particles */
+      #canvas-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+      }
+
+      /* UI Container */
+      #ui-container {
+        text-align: center;
+        z-index: 10;
+        transition:
+          opacity 1s ease,
+          transform 1s ease;
+      }
+
+      #ui-container.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.9);
+      }
+
+      h1 {
+        color: var(--gold);
+        font-size: 3.5rem;
+        margin-bottom: 10px;
+        text-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
+      }
+
+      p.subtitle {
+        font-family: "Noto Serif Devanagari", serif;
+        font-size: 1.2rem;
+        color: #b5926b;
+        margin-bottom: 40px;
+      }
+
+      .mood-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .mood-btn {
+        background: transparent;
+        border: 2px solid var(--gold);
+        color: var(--gold);
+        padding: 15px;
+        font-size: 1.1rem;
+        font-family: "Cinzel", serif;
+        font-weight: 800;
+        cursor: pointer;
+        transition: 0.3s;
+        border-radius: 3px;
+        backdrop-filter: blur(5px);
+      }
+
+      .mood-btn:hover {
+        background: var(--gold);
+        color: var(--bg-color);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+      }
+
+      /* ========================================= */
+      /* 3D MANUSCRIPT SCENE                       */
+      /* ========================================= */
+      #scene {
+        perspective: 2500px;
+        position: absolute;
+        z-index: 20;
+        display: none;
+        opacity: 0;
+        transition: opacity 1s ease;
+        width: 100%;
+        height: 100%;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+
+      #scene.visible {
+        display: flex;
+        opacity: 1;
+      }
+
+      .bundle {
+        position: relative;
+        width: 1050px;
+        height: 300px;
+        transform-style: preserve-3d;
+        transform: rotateX(15deg) rotateY(-5deg); /* Slight angle for 3D depth */
+        transition: transform 1.5s ease;
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(0px) rotateX(15deg) rotateY(-5deg);
+        }
+        50% {
+          transform: translateY(-15px) rotateX(18deg) rotateY(-3deg);
+        }
+        100% {
+          transform: translateY(0px) rotateX(15deg) rotateY(-5deg);
+        }
+      }
+      #scene.visible .bundle {
+        animation: float 6s ease-in-out infinite;
+      }
+
+      .leaf-container {
+        position: absolute;
+        width: 50%;
+        height: 100%;
+        transform-style: preserve-3d;
+      }
+
+      .leaf-right {
+        right: 0;
+        z-index: 1;
+      }
+
+      .leaf-left {
+        left: 50%;
+        transform-origin: left;
+        z-index: 5;
+        transition: transform 2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .bundle.open .leaf-left {
+        transform: rotateY(-180deg);
+      }
+
+      /* ----------------------------------------- */
+      /* RAW PALM LEAF TEXTURE & AGING             */
+      /* ----------------------------------------- */
+      .raw-leaf {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: var(--leaf-base);
+        /* SVG torn edge filter applied here */
+        filter: url(#torn-edges) drop-shadow(5px 15px 15px rgba(0, 0, 0, 0.8));
+
+        /* Organic imperfect corners as a fallback */
+        border-radius: 6px 18px 8px 22px / 15px 8px 25px 12px;
+
+        /* Texture: Leaf veins + heavy dark vignette (burnt edges) */
+        background-image:
+          radial-gradient(
+            ellipse at center,
+            transparent 30%,
+            rgba(92, 39, 5, 0.7) 85%,
+            #381202 100%
+          ),
+          repeating-linear-gradient(
+            to bottom,
+            transparent,
+            transparent 12px,
+            rgba(0, 0, 0, 0.1) 13px,
+            rgba(0, 0, 0, 0.15) 14px,
+            transparent 15px
+          ),
+          url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.25'/%3E%3C/svg%3E");
+
+        /* Deep inner burn */
+        box-shadow: inset 0 0 40px 10px rgba(60, 20, 0, 0.8);
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 30px 40px;
+        backface-visibility: hidden;
+      }
+
+      /* STACKED EFFECT (Multiple leaves behind) */
+      .leaf-right::before,
+      .leaf-right::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--leaf-dark);
+        filter: url(#torn-edges);
+        border-radius: 12px 5px 20px 8px;
+        background-image: repeating-linear-gradient(
+          to bottom,
+          transparent,
+          transparent 12px,
+          rgba(0, 0, 0, 0.2) 13px
+        );
+        box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.9);
+        z-index: -1;
+      }
+
+      .leaf-right::before {
+        transform: rotate(2deg) translateY(8px) translateX(5px);
+      }
+      .leaf-right::after {
+        transform: rotate(-1.5deg) translateY(15px) translateX(-5px);
+        z-index: -2;
+        background-color: #8c4c13;
+      }
+
+      /* Cover & Back faces for flipping page */
+      .leaf-left .front {
+        /* The top wooden/dark leaf cover */
+        background-color: #381a08;
+        background-image:
+          radial-gradient(
+            ellipse at center,
+            transparent 40%,
+            rgba(0, 0, 0, 0.8) 100%
+          ),
+          repeating-linear-gradient(
+            to bottom,
+            transparent,
+            transparent 8px,
+            rgba(0, 0, 0, 0.4) 9px,
+            transparent 10px
+          );
+        box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.9);
+      }
+      .leaf-left .back {
+        transform: rotateY(180deg);
+      }
+
+      /* Center binding hole */
+      .binding-hole {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 15px;
+        height: 15px;
+        background: #140700;
+        border-radius: 50%;
+        box-shadow:
+          inset 0 0 5px black,
+          0 1px 1px rgba(255, 255, 255, 0.2);
+        z-index: 10;
+      }
+
+      /* ----------------------------------------- */
+      /* TYPOGRAPHY (Thick, Dark, Smudged Ink)     */
+      /* ----------------------------------------- */
+      .text-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        /* Creates a slight "ink bleed" effect */
+        filter: drop-shadow(0px 0px 1px rgba(20, 7, 0, 0.4));
+      }
+
+      .shloka-text {
+        font-family: "Noto Serif Devanagari", serif;
+        font-size: 1.8rem;
+        line-height: 1.6;
+        font-weight: 900; /* Maximum thickness */
+        text-align: center;
+        white-space: pre-line;
+        color: var(--text-ink);
+      }
+
+      .reference-text {
+        font-family: "Noto Serif Devanagari", serif;
+        font-size: 1.1rem;
+        font-weight: 900;
+        margin-top: 15px;
+        color: #4a1500; /* Deep dried blood red/brown */
+        align-self: flex-end;
+        margin-right: 20px;
+      }
+
+      .translation-text {
+        font-family: "Noto Serif Devanagari", serif;
+        font-size: 1.6rem;
+        line-height: 1.6;
+        font-weight: 900;
+        text-align: center;
+        color: var(--text-ink);
+        padding: 0 20px;
+      }
+
+      .cover-title {
+        color: #d4af37;
+        font-size: 3rem;
+        font-family: "Noto Serif Devanagari", serif;
+        text-shadow: 0 5px 15px rgba(0, 0, 0, 1);
+        opacity: 0.6; /* Faded ancient gold */
+      }
+
+      /* Close Button */
+      .close-btn {
+        margin-top: 60px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--gold);
+        color: var(--gold);
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        font-family: "Cinzel", serif;
+        cursor: pointer;
+        transition: 0.3s;
+        border-radius: 3px;
+      }
+
+      .close-btn:hover {
+        background: var(--gold);
+        color: var(--bg-color);
+      }
+
+      /* Responsive */
+      @media (max-width: 1200px) {
+        .bundle {
+          transform: scale(0.8);
+        }
+      }
+      @media (max-width: 900px) {
+        .bundle {
+          transform: scale(0.6);
+        }
+        .mood-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 600px) {
+        .bundle {
+          transform: scale(0.35);
+        }
+        .mood-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- SVG Filter for Torn, Irregular Edges -->
+    <svg class="svg-filters">
+      <filter id="torn-edges">
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.02"
+          numOctaves="4"
+          result="noise"
+        />
+        <feDisplacementMap
+          in="SourceGraphic"
+          in2="noise"
+          scale="10"
+          xChannelSelector="R"
+          yChannelSelector="G"
+        />
+      </filter>
+    </svg>
+
+    <!-- Divine Background -->
+    <canvas id="canvas-bg"></canvas>
+
+    <!-- UI -->
+    <div id="ui-container">
+      <h1>Sacred Shlokas</h1>
+      <p class="subtitle">
+        ज्ञानं परमं बलम् | What is your current state of mind?
+      </p>
+      <div class="mood-grid">
+        <button class="mood-btn" onclick="openPandulipi('Focus & Purpose')">
+          Focus & Purpose
+        </button>
+        <button class="mood-btn" onclick="openPandulipi('Fear & Anxiety')">
+          Fear & Anxiety
+        </button>
+        <button
+          class="mood-btn"
+          onclick="openPandulipi('Self-Control & Discipline')"
+        >
+          Self-Control
+        </button>
+        <button
+          class="mood-btn"
+          onclick="openPandulipi('Confidence & Strength')"
+        >
+          Confidence & Strength
+        </button>
+        <button
+          class="mood-btn"
+          onclick="openPandulipi('Letting Go & Acceptance')"
+        >
+          Letting Go
+        </button>
+        <button class="mood-btn" onclick="openPandulipi('Peace & Inner Calm')">
+          Peace & Inner Calm
+        </button>
+      </div>
+    </div>
+
+    <!-- 3D Scene -->
+    <div id="scene">
+      <div class="bundle" id="pandulipi">
+        <!-- RIGHT STACK (Translation) -->
+        <div class="leaf-container leaf-right">
+          <div class="raw-leaf">
+            <div class="binding-hole" style="left: 20px"></div>
+            <div class="text-container">
+              <div class="translation-text" id="trans-element">
+                अनुवाद यहाँ दिखाई देगा...
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LEFT STACK (Cover flips to reveal Shloka) -->
+        <div class="leaf-container leaf-left">
+          <!-- Front Cover -->
+          <div class="raw-leaf front">
+            <h2 class="cover-title">पाण्डुलिपि</h2>
+          </div>
+
+          <!-- Inside Page (Shloka) -->
+          <div class="raw-leaf back">
+            <div class="binding-hole" style="right: 20px; left: auto"></div>
+            <div class="text-container">
+              <div class="shloka-text" id="shloka-element">
+                श्लोक यहाँ दिखाई देगा...
+              </div>
+              <div class="reference-text" id="ref-element">- सन्दर्भ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="close-btn" onclick="closePandulipi()">
+        Seek Another Path
+      </button>
+    </div>
+
+    <script>
+      const shlokasData = [
+        {
+          topic: "Focus & Purpose",
+          reference: "श्रीमद्भगवद्गीता 2.47",
+          shloka:
+            "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥",
+          translation:
+            "तुम्हारा अधिकार केवल कर्म करने में है, उसके फलों में कभी नहीं। इसलिए कर्मों के फल की इच्छा तुम्हारे कर्म का कारण न बने और न ही तुम्हारी आसक्ति कर्म न करने में हो।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "श्रीमद्भगवद्गीता 2.41",
+          shloka:
+            "व्यवसायात्मिका बुद्धिरेकेह कुरुनन्दन।\nबहुशाखा ह्यनन्ताश्च बुद्धयोऽव्यवसायिनाम्॥",
+          translation:
+            "हे कुरुनन्दन! इस कर्मयोग में निश्चयात्मिका बुद्धि एक ही होती है। किन्तु अस्थिर विचार वाले सकाम मनुष्यों की बुद्धियाँ निश्चय ही बहुत भेदों वाली और अनन्त होती हैं।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "श्रीमद्भगवद्गीता 3.8",
+          shloka:
+            "नियतं कुरु कर्म त्वं कर्म ज्यायो ह्यकर्मणः।\nशरीरयात्रापि च ते न प्रसिद्धयेदकर्मणः॥",
+          translation:
+            "तू शास्त्रविहित कर्तव्य कर्म कर, क्योंकि कर्म न करने की अपेक्षा कर्म करना श्रेष्ठ है। कर्म न करने से तेरा शरीर निर्वाह भी सिद्ध नहीं होगा।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "श्रीमद्भगवद्गीता 18.47",
+          shloka:
+            "श्रेयान्स्वधर्मो विगुणः परधर्मात्स्वनुष्ठितात्।\nस्वभावनियतं कर्म कुर्वन्नाप्नोति किल्बिषम्॥",
+          translation:
+            "अच्छी प्रकार आचरण किये हुए दूसरे के धर्म से गुणरहित भी अपना धर्म श्रेष्ठ है; क्योंकि स्वभाव से नियत किये हुए स्वधर्मरूप कर्म को करता हुआ मनुष्य पाप को प्राप्त नहीं होता।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "श्रीमद्भगवद्गीता 6.5",
+          shloka:
+            "उद्धरेदात्मनात्मानं नात्मानमवसादयेत्।\nआत्मैव ह्यात्मनो बन्धुरात्मैव रिपुरात्मनः॥",
+          translation:
+            "मनुष्य को चाहिए कि वह अपने मन के द्वारा अपना उद्धार करे और अपने आपको नीचे न गिराए। क्योंकि यह मन ही जीवात्मा का मित्र है और यह मन ही इसका शत्रु है।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "ईशावास्योपनिषद् 2 (तथा यजुर्वेद 40.2)",
+          shloka:
+            "कुर्वन्नेवेह कर्माणि जिजीविषेच्छतं समाः।\nएवं त्वयि नान्यथेतोऽस्ति न कर्म लिप्यते नरे॥",
+          translation:
+            "इस संसार में कर्म करते हुए ही सौ वर्ष तक जीने की इच्छा करनी चाहिए। इसके अतिरिक्त तुम्हारे लिए और कोई मार्ग नहीं है, जिससे तुम कर्म-बन्धन में न लिप्त हो सको।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "कठोपनिषद् 1.3.14",
+          shloka:
+            "उत्तिष्ठत जाग्रत प्राप्य वरान्निबोधत।\nक्षुरस्य धारा निशिता दुरत्यया दुर्गं पथस्तत्कवयो वदन्ति॥",
+          translation:
+            "उठो, जागो और श्रेष्ठ महापुरुषों के पास जाकर ज्ञान प्राप्त करो। विद्वान कहते हैं कि वह मार्ग छुरे की तीक्ष्ण धार के समान दुर्गम और पार करने में कठिन है।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "मुण्डकोपनिषद् 2.2.3",
+          shloka:
+            "धनुर्गृहीत्वौपनिषदं महास्त्रं शरं ह्युपासानिशितं सन्धयीत।\nआयम्य तद्भावगतेन चेतसा लक्ष्यं तदेवाक्षरं सोम्य विद्धि॥",
+          translation:
+            "उपनिषदों में बताए गए महास्त्र रूपी धनुष को लेकर, उस पर उपासना द्वारा तीक्ष्ण किया हुआ बाण चढ़ाना चाहिए। फिर एकाग्र चित्त से उसे खींचकर, हे सोम्य! उस अक्षर ब्रह्म रूपी लक्ष्य को ही बेधो।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "ऋग्वेद 1.89.1",
+          shloka: "आ नो भद्राः क्रतवो यन्तु विश्वतोऽदब्धासो अपरीतास उद्भिदः।",
+          translation:
+            "हमारे पास सभी दिशाओं से कल्याणकारी, कभी न दबने वाले और अजेय विचार आते रहें।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "अथर्ववेद 3.24.5",
+          shloka: "कृतं मे दक्षिणे हस्ते जयो मे सव्य आहितः।",
+          translation:
+            "मेरे दाहिने हाथ में पुरुषार्थ (कर्म) है और मेरे बाएँ हाथ में विजय रखी हुई है।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "चाणक्य नीति 13.2",
+          shloka:
+            "गतं शोको न कर्त्तव्यो भविष्यं नैव चिन्तयेत्।\nवर्तमानेन कालेन वर्तयन्ति विचक्षणाः॥",
+          translation:
+            "बीते हुए समय पर शोक नहीं करना चाहिए और भविष्य की चिंता नहीं करनी चाहिए। बुद्धिमान लोग वर्तमान समय में ही अपने कार्य करते हैं।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "महाभारत, उद्योग पर्व (विदुर नीति) 33.19",
+          shloka:
+            "यस्य कृत्यं न विघ्नन्ति शीतमुष्णं भयं रतिः।\nसमृद्धिरसमृद्धिर्वा स वै पण्डित उच्यते॥",
+          translation:
+            "जिसके कार्य में सर्दी, गर्मी, भय, अनुराग, संपन्नता अथवा विपन्नता बाधा नहीं डालते, वही व्यक्ति पंडित (ज्ञानी) कहलाता है।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "महाभारत, उद्योग पर्व (विदुर नीति) 33.20",
+          shloka:
+            "यस्य कृत्यं न जानन्ति मन्त्रं वा मन्त्रितं परे।\nकृतमेवास्य जानन्ति स वै पण्डित उच्यते॥",
+          translation:
+            "जिसके सोचे हुए कार्य और गुप्त मंत्रणा को दूसरे लोग नहीं जान पाते, बल्कि कार्य पूरा हो जाने पर ही जानते हैं, वही पंडित कहलाता है।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "वाल्मीकि रामायण, किष्किन्धा काण्ड 1.121",
+          shloka:
+            "उत्साहो बलवान् राजन् नास्त्युत्साहात् परं बलम्।\nसोत्साहस्य च लोकेषु न किंचिदपि दुर्लभम्॥",
+          translation:
+            "हे राजन्! उत्साह सबसे बड़ा बल है, उत्साह से बढ़कर कोई दूसरा बल नहीं है। उत्साही पुरुष के लिए इस संसार में कुछ भी दुर्लभ नहीं है।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "रामचरितमानस, सुन्दरकाण्ड, दोहा 1 चौपाई",
+          shloka: "राम काजु कीन्हें बिनु मोहि कहाँ बिश्राम।",
+          translation:
+            "भगवान श्री राम का कार्य पूरा किए बिना मुझे अब विश्राम कहाँ। (अर्थात लक्ष्य प्राप्ति तक रुकना नहीं है।)",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "कबीर दोहा",
+          shloka:
+            "जिन खोजा तिन पाइया, गहरे पानी पैठ।\nमैं बपुरा बूडन डरा, रहा किनारे बैठ॥",
+          translation:
+            "जो प्रयत्नपूर्वक गहरे पानी में उतरकर खोजते हैं, वे ही मोती पाते हैं। जो डूबने के डर से किनारे पर ही बैठे रहते हैं, वे खाली हाथ रह जाते हैं।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "कबीर दोहा",
+          shloka:
+            "काल करे सो आज कर, आज करे सो अब।\nपल में प्रलय होयगी, बहुरि करेगा कब॥",
+          translation:
+            "जो काम कल करना है उसे आज ही कर लो, और जो आज करना है उसे अभी कर लो। क्षण भर में विनाश हो सकता है, फिर अपने कार्य कब करोगे।",
+        },
+        {
+          topic: "Focus & Purpose",
+          reference: "कबीर दोहा",
+          shloka:
+            "धीरे-धीरे रे मना, धीरे सब कुछ होय।\nमाली सींचे सौ घड़ा, रितु आए फल होय॥",
+          translation:
+            "हे मन! धैर्य रखो, सब कुछ धीरे-धीरे ही होता है। चाहे माली सौ घड़े पानी सींच दे, परंतु फल तो ऋतु आने पर ही लगता है।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "श्रीमद्भगवद्गीता 2.40",
+          shloka:
+            "नेहाभिक्रमनाशोऽस्ति प्रत्यवायो न विद्यते।\nस्वल्पमप्यस्य धर्मस्य त्रायते महतो भयात्॥",
+          translation:
+            "इस कर्मयोग में आरंभ का नाश नहीं है और उलटा फलरूप दोष भी नहीं है, बल्कि इस धर्म का थोड़ा सा भी आचरण जन्म-मृत्यु रूपी महान भय से रक्षा कर लेता है।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "श्रीमद्भगवद्गीता 18.66",
+          shloka:
+            "सर्वधर्मान्परित्यज्य मामेकं शरणं व्रज।\nअहं त्वा सर्वपापेभ्यो मोक्षयिष्यामि मा शुचः॥",
+          translation:
+            "सम्पूर्ण धर्मों का आश्रय छोड़कर तू केवल मेरी (परमात्मा की) शरण में आ जा। मैं तुझे सम्पूर्ण पापों से मुक्त कर दूँगा, तू शोक मत कर।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "श्रीमद्भगवद्गीता 2.27",
+          shloka:
+            "जातस्य हि ध्रुवो मृत्युर्ध्रुवं जन्म मृतस्य च।\nतस्मादपरिहार्येऽर्थे न त्वं शोचितुमर्हसि॥",
+          translation:
+            "क्योंकि पैदा हुए की मृत्यु निश्चित है और मरे हुए का जन्म निश्चित है। इसलिए इस बिना उपाय वाले विषय में तुझे शोक नहीं करना चाहिए।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "श्रीमद्भगवद्गीता 11.34",
+          shloka:
+            "द्रोणं च भीष्मं च जयद्रथं च कर्णं तथान्यानपि योधवीरान्।\nमया हतांस्त्वं जहि मा व्यथिष्ठा युध्यस्व जेतासि रणे सपत्नान्॥",
+          translation:
+            "द्रोणाचार्य, भीष्म, जयद्रथ, कर्ण और अन्य शूरवीरों को जो मेरे द्वारा पहले ही मारे जा चुके हैं, तू मार। भयभीत मत हो, युद्ध कर; तू रण में शत्रुओं को अवश्य जीतेगा।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "श्रीमद्भगवद्गीता 2.56",
+          shloka:
+            "दुःखेष्वनुद्विग्नमनाः सुखेषु विगतस्पृहः।\nवीतरागभयक्रोधः स्थितधीर्मुनिरुच्यते॥",
+          translation:
+            "दुःखों की प्राप्ति होने पर जिसके मन में उद्वेग नहीं होता, सुखों की प्राप्ति में जिसकी इच्छा दूर हो गई है तथा जिसके राग, भय और क्रोध नष्ट हो गए हैं, ऐसा मुनि स्थिरबुद्धि कहा जाता है।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "तैत्तिरीयोपनिषद् 2.9.1",
+          shloka:
+            "यतो वाचो निवर्तन्ते अप्राप्य मनसा सह।\nआनन्दं ब्रह्मणो विद्वान् न बिभेति कुतश्चनेति॥",
+          translation:
+            "जहाँ से मन के सहित वाणी बिना पहुँचे ही लौट आती है, उस ब्रह्म के आनंद को जानने वाला विद्वान कभी किसी से भयभीत नहीं होता।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "ईशावास्योपनिषद् 6",
+          shloka:
+            "यस्तु सर्वाणि भूतान्यात्मन्येवानुपश्यति।\nसर्वभूतेषु चात्मानं ततो न विजुगुप्सते॥",
+          translation:
+            "जो व्यक्ति सभी प्राणियों को अपनी आत्मा में ही देखता है और सभी प्राणियों में अपनी आत्मा को ही देखता है, वह फिर किसी से घृणा या भय नहीं करता।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "बृहदारण्यकोपनिषद् 1.4.2",
+          shloka:
+            "सोऽबिभेत्, तस्मादेकाकी बिभेति। स हायमीक्षां चक्रे, यन्मदन्यन्नास्ति, कस्मान्नु बिभेमीति, तत एवास्य भयं वीयाय, कस्माद्ध्यभेष्यत्? द्वितीयाद्वै भयं भवति॥",
+          translation:
+            "उस (आदि पुरुष) ने भय का अनुभव किया, इसलिए एकाकी व्यक्ति डरता है। फिर उसने विचार किया कि जब मेरे सिवा कोई दूसरा है ही नहीं, तो मैं किससे डरूँ? तब उसका भय दूर हो गया, क्योंकि भय तो दूसरे से ही उत्पन्न होता है।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "अथर्ववेद 19.15.5",
+          shloka: "अभयं नक्तमभयं दिवा नः सर्वा आशामम मित्रं भवन्तु।",
+          translation:
+            "हमें रात्रि में अभय प्राप्त हो, दिन में अभय प्राप्त हो। सभी दिशाएं मेरी मित्र बनें और मुझे निर्भय करें।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "अथर्ववेद 19.15.6",
+          shloka:
+            "अभयं मित्रादभयममित्रादभयं ज्ञातादभयं परोक्षात्।\nअभयं नक्तमभयं दिवा नः सर्वा आशा मम मित्रं भवन्तु॥",
+          translation:
+            "मुझे मित्र से अभय हो, शत्रु से अभय हो; जो ज्ञात है उससे अभय हो और जो परोक्ष (अज्ञात) है उससे भी अभय हो। हमें रात और दिन दोनों में अभय मिले, सभी दिशाएँ मेरी मित्र हो जाएं।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "वाल्मीकि रामायण, युद्ध काण्ड 18.33",
+          shloka:
+            "सकृदेव प्रपन्नाय तवास्मीति च याचते।\nअभयं सर्वभूतेभ्यो ददाम्येतद् व्रतं मम॥",
+          translation:
+            "जो एक बार भी मेरी शरण में आकर यह कहता है कि 'मैं तुम्हारा हूँ', उसे मैं सभी प्राणियों से अभय (निर्भयता) प्रदान करता हूँ, यह मेरा व्रत है।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "वाल्मीकि रामायण, अयोध्या काण्ड 105.17",
+          shloka:
+            "यथा फलानां पक्वानां नान्यत्र पतनाद्भयम्।\nएवं नरस्य जातस्य नान्यत्र मरणाद्भयम्॥",
+          translation:
+            "जिस प्रकार पके हुए फलों को गिरने के सिवा और कोई भय नहीं रहता, उसी प्रकार जन्म लेने वाले मनुष्य को मृत्यु के सिवा और कोई भय नहीं होता।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "महाभारत, शान्ति पर्व 25.31",
+          shloka:
+            "सुखस्यानन्तरं दुःखं दुःखस्यानन्तरं सुखम्।\nचक्रवत् परिवर्तन्ते दुःखानि च सुखानि च॥",
+          translation:
+            "सुख के बाद दुःख और दुःख के बाद सुख आता है। मनुष्यों के सुख और दुःख पहिये की भाँति निरन्तर घूमते रहते हैं (इसलिए इनकी चिंता व्यर्थ है)।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "चाणक्य नीति 3.19",
+          shloka:
+            "तावद्भयेषु भेतव्यं यावद्भयमनागतम्।\nआगतं तु भयं दृष्ट्वा प्रहर्तव्यमशङ्कया॥",
+          translation:
+            "भय से तभी तक डरना चाहिए जब तक भय सामने न आ जाए। परन्तु भय को सामने आया हुआ देखकर बिना किसी शंका के उस पर प्रहार (उसका सामना) करना चाहिए।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "रामचरितमानस, बालकाण्ड, दोहा 51 चौपाई",
+          shloka: "होइहि सोइ जो राम रचि राखा।\nको करि तर्क बढ़ावै साखा॥",
+          translation:
+            "जो कुछ श्री राम ने रच रखा है, वही होगा। तर्क करके (अर्थात चिंता और अनुमान लगाकर) कौन बात को बढ़ावे।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "रामचरितमानस, लंकाकाण्ड, दोहा 79 (विभीषण गीता)",
+          shloka: "सखा धरममय अस रथ जाकें।\nजीतन कहँ न कतहुँ रिपु ताकें॥",
+          translation:
+            "हे सखा! जिसके पास ऐसा धर्ममय रथ है (जिसमें धैर्य, शील, सत्य आदि के पहिए हों), उसके लिए जीतने को कहीं कोई शत्रु ही नहीं है (उसे किसी का भय नहीं)।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "कबीर दोहा",
+          shloka:
+            "चिंता ऐसी डाकिनी, काट कलेजा खाए।\nवैद बिचारा क्या करे, कहाँ तक दवा लगाए॥",
+          translation:
+            "चिंता एक ऐसी डाकिनी (राक्षसी) के समान है जो कलेजे को काट कर खा जाती है। इसमें बेचारा वैद्य (डॉक्टर) भी क्या कर सकता है और कहाँ तक दवा लगा सकता है।",
+        },
+        {
+          topic: "Fear & Anxiety",
+          reference: "कबीर दोहा",
+          shloka:
+            "चिंता वाकी कीजिये, जो अनहोनी होय।\nअनहोनी होनी नहीं, होनी ही सो होय॥",
+          translation:
+            "चिंता उसी बात की करनी चाहिए जो अनहोनी हो। परन्तु जो अनहोनी है वह कभी होगी नहीं, और जो होनी है वह तो होकर ही रहेगी (इसलिए चिंता व्यर्थ है)।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "श्रीमद्भगवद्गीता 6.6",
+          shloka:
+            "बन्धुरात्मात्मनस्तस्य येनात्मैवात्मना जितः।\nअनात्मनस्तु शत्रुत्वे वर्तेतात्मैव शत्रुवत्॥",
+          translation:
+            "जिसने अपने मन और इंद्रियों को जीत लिया है, उसके लिए वह (उसका मन) ही उसका मित्र है; परन्तु जिसने मन को नहीं जीता है, उसके लिए उसका अपना मन ही शत्रु के समान कार्य करता है।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "श्रीमद्भगवद्गीता 2.62",
+          shloka:
+            "ध्यायतो विषयान्पुंसः सङ्गस्तेषूपजायते।\nसङ्गात्सञ्जायते कामः कामात्क्रोधोऽभिजायते॥",
+          translation:
+            "विषयों (इन्द्रियों के भोगों) का चिन्तन करने वाले पुरुष की उन विषयों में आसक्ति हो जाती है, आसक्ति से उन विषयों की कामना उत्पन्न होती है और कामना में विघ्न पड़ने से क्रोध उत्पन्न होता है।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "श्रीमद्भगवद्गीता 2.63",
+          shloka:
+            "क्रोधाद्भवति सम्मोहः सम्मोहात्स्मृतिविभ्रमः।\nस्मृतिभ्रंशाद्बुद्धिनाशो बुद्धिनाशात्प्रणश्यति॥",
+          translation:
+            "क्रोध से अत्यंत मूढ़भाव उत्पन्न हो जाता है, मूढ़भाव से स्मृति में भ्रम हो जाता है, स्मृति में भ्रम हो जाने से बुद्धि अर्थात् ज्ञानशक्ति का नाश हो जाता है और बुद्धि का नाश हो जाने से मनुष्य अपनी स्थिति से गिर जाता है।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "श्रीमद्भगवद्गीता 16.21",
+          shloka:
+            "त्रिविधं नरकस्येदं द्वारं नाशनमात्मनः।\nकामः क्रोधस्तथा लोभस्तस्मादेतत्त्रयं त्यजेत्॥",
+          translation:
+            "काम, क्रोध और लोभ - ये तीन प्रकार के नरक के द्वार हैं जो आत्मा का पतन करने वाले हैं। इसलिए इन तीनों को त्याग देना चाहिए।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "श्रीमद्भगवद्गीता 3.43",
+          shloka:
+            "एवं बुद्धेः परं बुद्ध्वा संस्तभ्यात्मानमात्मना।\nजहि शत्रुं महाबाहो कामरूपं दुरासदम्॥",
+          translation:
+            "हे महाबाहो! इस प्रकार बुद्धि से परे (सूक्ष्म और बलवान) आत्मा को जानकर और बुद्धि द्वारा मन को वश में करके, इस कामरूप दुर्जय शत्रु को मार डाल।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "कठोपनिषद् 1.3.3",
+          shloka:
+            "आत्मानँ रथिनं विद्धि शरीरँ रथमेव तु।\nबुद्धिं तु सारथिं विद्धि मनः प्रग्रहमेव च॥",
+          translation:
+            "जीवात्मा को इस शरीर रूपी रथ का स्वामी (रथी) जानो, शरीर को रथ समझो, बुद्धि को सारथी (रथ चलाने वाला) समझो और मन को उस रथ की लगाम जानो।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "कठोपनिषद् 1.3.4",
+          shloka:
+            "इन्द्रियाणि हयानाहुर्विषयाँस्तेषु गोचरान्।\nआत्मेन्द्रियमनोयुक्तं भोक्तेत्याहुर्मनीषिणः॥",
+          translation:
+            "इन्द्रियों को घोड़े कहते हैं और इन्द्रियों के विषयों को उनका मार्ग कहते हैं। शरीर, इन्द्रिय और मन से युक्त आत्मा को विद्वान लोग भोक्ता (भोगने वाला) कहते हैं।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "ईशावास्योपनिषद् 1",
+          shloka:
+            "ईशावास्यमिदं सर्वं यत्किञ्च जगत्यां जगत्।\nतेन त्यक्तेन भुञ्जीथा मा गृधः कस्यस्विद्धनम्॥",
+          translation:
+            "इस सम्पूर्ण ब्रह्मांड में जो कुछ भी जड़-चेतन स्वरूप है, वह सब ईश्वर से व्याप्त है। इसलिए त्यागपूर्वक इसका भोग करो, किसी के धन की लालसा मत करो।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "यजुर्वेद 34.1 (शिवसंकल्प सूक्त)",
+          shloka:
+            "यज्जाग्रतो दूरमुदैति दैवं तदु सुप्तस्य तथैवैति।\nदूरङ्गमं ज्योतिषां ज्योतिरेकं तन्मे मनः शिवसंकल्पमस्तु॥",
+          translation:
+            "जो मन जाग्रत अवस्था में बहुत दूर तक चला जाता है और जो सोते हुए मनुष्य का भी वैसे ही दूर चला जाता है, जो प्रकाशों का भी प्रकाश और एक है, वह मेरा मन कल्याणकारी संकल्पों वाला हो।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "महाभारत, उद्योग पर्व (विदुर नीति) 33.66",
+          shloka:
+            "षड् दोषाः पुरुषेणेह हातव्या भूतिमिच्छता।\nनिद्रा तन्द्रा भयं क्रोध आलस्यं दीर्घसूत्रता॥",
+          translation:
+            "ऐश्वर्य या उन्नति चाहने वाले पुरुष को ये छह दोष त्याग देने चाहिए - नींद, तंद्रा (सुस्ती), डर, क्रोध, आलस्य और दीर्घसूत्रता (काम को कल पर टालने की आदत)।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "वाल्मीकि रामायण, सुन्दर काण्ड 55.4",
+          shloka:
+            "यः समुत्पतितं क्रोधं क्षमयैवनिरस्यति।\nयथोरगस्त्वचं जीर्णां स वै पुरुष उच्यते॥",
+          translation:
+            "जो पुरुष उत्पन्न हुए क्रोध को क्षमा के द्वारा उसी प्रकार उतार फेंकता है जैसे साँप अपनी पुरानी केंचुली को, वही सच्चा पुरुष कहलाता है।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "रामचरितमानस, अरण्यकाण्ड, दोहा 38 चौपाई",
+          shloka:
+            "काम क्रोध मद लोभ सब नाथ नरक के पंथ।\nसब परिहरि रघुबीरहि भजहु भजहिं जेहि संत॥",
+          translation:
+            "हे नाथ! काम, क्रोध, मद और लोभ - ये सब नरक के रास्ते हैं। इन सबको छोड़कर श्री रघुनाथ जी का भजन कीजिए, जिनका भजन संत लोग करते हैं।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "रामचरितमानस, उत्तरकाण्ड, दोहा 116 चौपाई",
+          shloka:
+            "इन्द्रिय द्वार झरोखा नाना। तहँ तहँ सुर बैठे करि थाना॥\nआवत देखहिं बिषय बयारी। ते हठि देहीं कपाट उघारी॥",
+          translation:
+            "शरीर में इन्द्रियों के अनेक द्वार और झरोखे हैं, वहाँ-वहाँ देवताओं ने अपना स्थान बना रखा है। जब वे विषय रूपी हवा को आते देखते हैं, तो हठपूर्वक उन किवाड़ों को खोल देते हैं (इसलिए इन्द्रिय संयम आवश्यक है)।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "चाणक्य नीति 6.15",
+          shloka:
+            "इन्द्रियाणि च संयम्य बकवत् पण्डितो नरः।\nदेशकालबलं ज्ञात्वा सर्वकार्याणि साधयेत्॥",
+          translation:
+            "एक बुद्धिमान व्यक्ति को चाहिए कि वह बगुले के समान अपनी इन्द्रियों पर नियंत्रण रखे और स्थान, समय तथा अपनी क्षमता को भली-भांति समझकर अपने सभी कार्यों को सिद्ध करे।",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "चाणक्य नीति 2.7",
+          shloka:
+            "मनसा चिन्तितं कार्यं वचसा न प्रकाशयेत्।\nमन्त्रेण रक्षयेद् गूढं कार्ये चापि नियोजयेत्॥",
+          translation:
+            "मन में सोचे हुए कार्य को वाणी द्वारा प्रकट नहीं करना चाहिए। उसे मंत्र की तरह गुप्त रखना चाहिए और चुपचाप उसे कार्यरूप में परिणत करना चाहिए। (वाक् और विचार का संयम)",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "कबीर दोहा",
+          shloka:
+            "बुरा जो देखन मैं चला, बुरा न मिलिया कोय।\nजो दिल खोजा आपना, मुझसे बुरा न कोय॥",
+          translation:
+            "जब मैं इस संसार में बुराई खोजने निकला तो मुझे कोई बुरा नहीं मिला। लेकिन जब मैंने अपने ही मन के भीतर झाँका, तो पाया कि मुझसे बुरा कोई और नहीं है। (आत्मनिरीक्षण और आत्म-नियंत्रण)",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "कबीर दोहा",
+          shloka:
+            "निंदक नियरे राखिए, आँगन कुटी छवाय।\nबिन पानी, साबुन बिना, निर्मल करे सुभाय॥",
+          translation:
+            "जो हमारी निंदा (आलोचना) करते हैं, उन्हें अपने पास ही रखना चाहिए। क्योंकि वे बिना साबुन और पानी के ही हमारी कमियों को बताकर हमारे स्वभाव को निर्मल कर देते हैं। (अहंकार पर नियंत्रण)",
+        },
+        {
+          topic: "Self-Control & Discipline",
+          reference: "कबीर दोहा",
+          shloka:
+            "कबीरा मन निर्मल भया, जैसे गंगा नीर।\nपाछे-पाछे हरि फिरै, कहत कबीर कबीर॥",
+          translation:
+            "जब मन गंगा के जल के समान पवित्र और विकार-रहित (संयमित) हो जाता है, तब स्वयं भगवान हरि पीछे-पीछे 'कबीर-कबीर' पुकारते हुए घूमते हैं।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "श्रीमद्भगवद्गीता 18.78",
+          shloka:
+            "यत्र योगेश्वरः कृष्णो यत्र पार्थो धनुर्धरः।\nतत्र श्रीर्विजयो भूतिर्ध्रुवा नीतिर्मतिर्मम॥",
+          translation:
+            "जहाँ योगेश्वर भगवान श्रीकृष्ण हैं और जहाँ गाण्डीव धनुषधारी अर्जुन हैं, वहीं पर श्री, विजय, विभूति (ऐश्वर्य) और अचल नीति है, ऐसा मेरा मत है।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "श्रीमद्भगवद्गीता 2.3",
+          shloka:
+            "क्लैब्यं मा स्म गमः पार्थ नैतत्त्वय्युपपद्यते।\nक्षुद्रं हृदयदौर्बल्यं त्यक्त्वोत्तिष्ठ परन्तप॥",
+          translation:
+            "हे पार्थ! नपुंसकता (कायरता) को प्राप्त मत हो, यह तुम्हारे योग्य नहीं है। हे परन्तप! हृदय की तुच्छ दुर्बलता को त्यागकर युद्ध के लिए खड़े हो जाओ।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "श्रीमद्भगवद्गीता 11.33",
+          shloka:
+            "तस्मात्त्वमुत्तिष्ठ यशो लभस्व जित्वा शत्रून्भुङ्क्ष्व राज्यं समृद्धम्।\nमयैवैते निहताः पूर्वमेव निमित्तमात्रं भव सव्यसाचिन्॥",
+          translation:
+            "इसलिए तू उठ और यश प्राप्त कर; शत्रुओं को जीतकर धन-धान्य से सम्पन्न राज्य का भोग कर। ये सब मेरे द्वारा पहले ही मारे जा चुके हैं, हे सव्यसाचिन् (अर्जुन)! तू तो केवल निमित्तमात्र बन जा।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "श्रीमद्भगवद्गीता 18.43",
+          shloka:
+            "शौर्यं तेजो धृतिर्दाक्ष्यं युद्धे चाप्यपलायनम्।\nदानमीश्वरभावश्च क्षात्रं कर्म स्वभावजम्॥",
+          translation:
+            "शूरवीरता, तेज, धैर्य, चतुरता, युद्ध में पीछे न हटना, दान देना और स्वामी-भाव—ये सभी क्षत्रियों के स्वाभाविक कर्म हैं।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "मुण्डकोपनिषद् 3.2.4",
+          shloka:
+            "नायमात्मा बलहीनेन लभ्यो न च प्रमादात्तपसो वाप्यलिङ्गात्।\nएतैरुपायैर्यतते यस्तु विद्वांस्तस्यैष आत्मा विशते ब्रह्मधाम॥",
+          translation:
+            "यह आत्मा बलहीन मनुष्य द्वारा प्राप्त नहीं किया जा सकता, न ही प्रमाद (असावधानी) से और न ही वैराग्य-रहित तपस्या से प्राप्त होता है। जो विद्वान इन (उचित) उपायों से प्रयत्न करता है, उसी की आत्मा ब्रह्मधाम में प्रवेश करती है।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "यजुर्वेद 19.9",
+          shloka:
+            "तेजोऽसि तेजो मयि धेहि। वीर्यमसि वीर्यं मयि धेहि।\nबलमसि बलं मयि धेहि। ओजोऽसि ओजो मयि धेहि॥",
+          translation:
+            "हे परमेश्वर! आप तेजोमय हैं, मुझे तेज धारण कराएँ; आप वीर्यवान हैं, मुझे वीर्य (पराक्रम) प्रदान करें; आप बलवान हैं, मुझे बल प्रदान करें; आप ओजस्वी हैं, मुझे ओज धारण कराएँ।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "अथर्ववेद 12.1.54",
+          shloka:
+            "अहमस्मि सहमान उत्तरो नाम भूम्याम्।\nअभीषाडस्मि विश्वाषाडाशामाशां विषासहिः॥",
+          translation:
+            "मैं इस पृथ्वी पर पराक्रमी और सबसे श्रेष्ठ हूँ। मैं शत्रुओं को पराजित करने वाला, सबको जीतने वाला और हर दिशा में विजयी हूँ।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "ऋग्वेद 1.89.8",
+          shloka:
+            "भद्रं कर्णेभिः शृणुयाम देवा भद्रं पश्येमाक्षभिर्यजत्राः।\nस्थिरैरङ्गैस्तुष्टुवांसस्तनूभिर्व्यशेम देवहितं यदायुः॥",
+          translation:
+            "हे देवों! हम अपने कानों से कल्याणकारी बातें सुनें, अपनी आँखों से कल्याणकारी दृश्य देखें। अपने सुदृढ़ और पुष्ट अंगों व शरीरों से आपकी स्तुति करते हुए, हम देव-निर्धारित पूरी आयु को प्राप्त करें।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "वाल्मीकि रामायण, किष्किन्धा काण्ड 1.122",
+          shloka:
+            "शोको नाशयते धैर्यं शोको नाशयते श्रुतम्।\nशोको नाशयते सर्वं नास्ति शोकसमो रिपुः॥",
+          translation:
+            "शोक धैर्य को नष्ट कर देता है, शोक ज्ञान को नष्ट कर देता है। शोक मनुष्य का सब कुछ नष्ट कर देता है, संसार में शोक के समान कोई दूसरा शत्रु नहीं है (इसलिए धैर्य और बल धारण करें)।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "वाल्मीकि रामायण, सुन्दर काण्ड 12.10",
+          shloka:
+            "अनिर्वेदः श्रियो मूलमनिर्वेदः परं सुखम्।\nअनिर्वेदो हि सततं सर्वार्थेषु प्रवर्तकः॥",
+          translation:
+            "उत्साह (हताश न होना) ही संपत्ति और सफलता का मूल है, उत्साह ही परम सुख है। उत्साह ही मनुष्य को सभी कार्यों में निरंतर प्रवृत्त करता है।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "रामचरितमानस, किष्किन्धाकाण्ड, दोहा 30 चौपाई",
+          shloka:
+            "कहइ रीछपति सुनु हनुमाना। का चुप साधि रहेहु बलवाना॥\nपवन तनय बल पवन समाना। बुधि बिबेक बिग्यान निधाना॥",
+          translation:
+            "जाम्बवान (रीछपति) ने कहा—हे हनुमान! सुनो, हे बलवान! तुमने यह क्या चुप साध रखी है? तुम पवन के पुत्र हो और तुम्हारा बल पवन के ही समान (असीम) है। तुम बुद्धि, विवेक और विज्ञान के भंडार हो।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "रामचरितमानस, सुन्दरकाण्ड, दोहा 1 चौपाई",
+          shloka:
+            "राम काजु लगि तव अवतारा। सुनतहिं भयउ पर्बताकारा॥\nकनक बरन तन तेज बिराजा। मानहु अपर गिरिन्ह कर राजा॥",
+          translation:
+            "श्री राम जी के कार्य के लिए ही तुम्हारा अवतार हुआ है। यह सुनते ही हनुमान जी पर्वत के आकार के (विशालकाय) हो गए। उनका सुवर्ण के रंग का शरीर तेज से चमकने लगा, मानो दूसरा पर्वतों का राजा (सुमेरु) हो।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "महाभारत, उद्योग पर्व 133.15 (विदुला वाक्य)",
+          shloka: "मुहूर्तं ज्वलितं श्रेयो न च धूमायितं चिरम्।",
+          translation:
+            "क्षण भर के लिए ही सही, लेकिन आग की तरह प्रज्वलित होकर जलना (वीरता दिखाना) श्रेष्ठ है, किंतु लंबे समय तक धुँधुआते (कायरतापूर्ण जीवन जीते) रहना श्रेष्ठ नहीं है।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "चाणक्य नीति 6.16",
+          shloka:
+            "प्रभूतं कार्यमल्पी वा यन्नरः कर्तुमिच्छति।\nसर्वारम्भेण तत्कार्यं सिंहादेकं प्रचक्षते॥",
+          translation:
+            "मनुष्य जो भी कार्य करना चाहे, चाहे वह बहुत बड़ा हो या छोटा, उसे अपने पूरे सामर्थ्य और शक्ति के साथ करना चाहिए। यह गुण शेर से सीखना चाहिए।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "चाणक्य नीति 3.11",
+          shloka:
+            "उद्योगे नास्ति दारिद्र्यं जपतो नास्ति पातकम्।\nमौनेन कलहो नास्ति नास्ति जागरिते भयम्॥",
+          translation:
+            "परिश्रम (उद्योग) करने पर दरिद्रता नहीं रहती, भगवान का नाम जपने से पाप नहीं रहता। मौन रहने से कलह नहीं होता और जागते रहने (सतर्क रहने) पर भय नहीं रहता।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "हितोपदेश (प्रस्ताविका 36) / महाभारत",
+          shloka:
+            "उद्यमेन हि सिध्यन्ति कार्याणि न मनोरथैः।\nन हि सुप्तस्य सिंहस्य प्रविशन्ति मुखे मृगाः॥",
+          translation:
+            "कार्य केवल परिश्रम से ही सिद्ध होते हैं, केवल इच्छाएं करने से नहीं। सोए हुए शेर के मुँह में हिरण स्वयं प्रवेश नहीं करते (उसे भी शिकार के लिए परिश्रम करना पड़ता है)।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "कबीर दोहा",
+          shloka:
+            "सूरमा सोई सराहिये, जो लड़े दीन के हेत।\nपुरजा-पुरजा कटि मरै, तऊ न छाड़े खेत॥",
+          translation:
+            "सच्चा शूरवीर उसी को कहना चाहिए जो दीनों (असहायों) या सत्य की रक्षा के लिए लड़ता है। युद्ध में कटकर उसके टुकड़े-टुकड़े हो जाएं, फिर भी वह मैदान छोड़कर नहीं भागता।",
+        },
+        {
+          topic: "Confidence & Strength",
+          reference: "कबीर दोहा",
+          shloka:
+            "सिंहों के लेहड़ नहीं, हंसों की नहीं पांत।\nलालों की नहीं बोरियां, साधु न चलें जमात॥",
+          translation:
+            "शेरों के झुंड नहीं होते (वे अकेले ही शक्तिशाली होते हैं), हंसों की पंक्तियाँ नहीं होतीं, हीरों (लाल) की बोरियां नहीं भरी जातीं, और सच्चे साधु झुंड बनाकर नहीं चलते। (सामर्थ्यवान अपनी शक्ति पर स्वयं खड़ा होता है)।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "श्रीमद्भगवद्गीता 2.14",
+          shloka:
+            "मात्रास्पर्शास्तु कौन्तेय शीतोष्णसुखदुःखदाः।\nआगमापायिनोऽनित्यास्तांस्तितिक्षस्व भारत॥",
+          translation:
+            "हे कुन्तीपुत्र! सर्दी-गर्मी और सुख-दुःख को देने वाले इन्द्रिय और विषयों के संयोग तो उत्पत्ति-विनाशशील और अनित्य हैं। इसलिए हे भारत! तू उनको सहन कर (उन्हें स्वीकार कर)।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "श्रीमद्भगवद्गीता 2.22",
+          shloka:
+            "वासांसि जीर्णानि यथा विहाय नवानि गृह्णाति नरोऽपराणि।\nतथा शरीराणि विहाय जीर्णा-न्यन्यानि संयाति नवानि देही॥",
+          translation:
+            "जैसे मनुष्य पुराने वस्त्रों को त्यागकर दूसरे नए वस्त्रों को ग्रहण करता है, वैसे ही जीवात्मा पुराने शरीरों को त्यागकर दूसरे नए शरीरों को प्राप्त होती है।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "श्रीमद्भगवद्गीता 2.28",
+          shloka:
+            "अव्यक्तादीनि भूतानि व्यक्तमध्यानि भारत।\nअव्यक्तनिधनान्येव तत्र का परिदेवना॥",
+          translation:
+            "हे भारत! सम्पूर्ण प्राणी जन्म से पहले अप्रकट थे और मरने के बाद भी अप्रकट हो जाने वाले हैं, केवल बीच में ही प्रकट हैं, फिर इसमें शोक (विलाप) करने की क्या बात है?",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "श्रीमद्भगवद्गीता 12.17",
+          shloka:
+            "यो न हृष्यति न द्वेष्टि न शोचति न काङ्क्षति।\nशुभाशुभपरित्यागी भक्तिमान्यः स मे प्रियः॥",
+          translation:
+            "जो न कभी हर्षित होता है, न द्वेष करता है, न शोक करता है, न कामना करता है, तथा जो शुभ और अशुभ सम्पूर्ण कर्मों के फलों का त्यागी है—वह भक्त मुझे प्रिय है।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "श्रीमद्भगवद्गीता 2.71",
+          shloka:
+            "विहाय कामान्यः सर्वान्पुमांश्चरति निःस्पृहः।\nनिर्ममो निरहङ्कारः स शान्तिमधिगच्छति॥",
+          translation:
+            "जो पुरुष सम्पूर्ण कामनाओं को त्यागकर ममतारहित, अहंकाररहित और स्पृहारहित (आसक्ति-रहित) होकर आचरण करता है, वही शांति को प्राप्त होता है।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "श्रीमद्भगवद्गीता 4.22",
+          shloka:
+            "यदृच्छालाभसन्तुष्टो द्वन्द्वातीतो विमत्सरः।\nसमः सिद्धावसिद्धौ च कृत्वापि न निबध्यते॥",
+          translation:
+            "जो बिना इच्छा के अपने आप प्राप्त हुए पदार्थ में संतुष्ट रहता है, जिसमें ईर्ष्या का सर्वथा अभाव हो गया है, जो हर्ष-शोक आदि द्वंद्वों से सर्वथा अतीत है; ऐसा सिद्धि और असिद्धि में सम रहने वाला पुरुष कर्म करता हुआ भी उनसे नहीं बँधता।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "कठोपनिषद् 2.3.14",
+          shloka:
+            "यदा सर्वे प्रमुच्यन्ते कामा येऽस्य हृदि श्रिताः।\nअथ मर्त्योऽमृतो भवत्यत्र ब्रह्म समश्नुते॥",
+          translation:
+            "जब इस मनुष्य के हृदय में स्थित सभी कामनाएं (इच्छाएं) पूरी तरह छूट जाती हैं, तब यह मरणशील मनुष्य अमर हो जाता है और यहीं (इसी देह में) ब्रह्म को प्राप्त कर लेता है।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "श्वेताश्वतरोपनिषद् 4.6 (तथा मुण्डक 3.1.1)",
+          shloka:
+            "द्वा सुपर्णा सयुजा सखाया समानं वृक्षं परिषस्वजाते।\nतयोरन्यः पिप्पलं स्वाद्वत्त्यनश्नन्नन्यो अभिचाकशीति॥",
+          translation:
+            "दो सुंदर पंखों वाले पक्षी (जीवात्मा और परमात्मा) जो सदा साथ रहने वाले मित्र हैं, एक ही वृक्ष (शरीर) पर बैठे हैं। उनमें से एक (जीवात्मा) उस वृक्ष के स्वादिष्ट फलों को खाता है, जबकि दूसरा (परमात्मा) बिना खाए केवल साक्षी रूप में देखता रहता है। (फलों की आसक्ति त्यागने का संदेश)",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "वाल्मीकि रामायण, अयोध्या काण्ड 105.15",
+          shloka:
+            "सर्वे क्षयान्ता निचयाः पतनान्ताः समुच्छ्रयाः।\nसंयोगा विप्रयोगान्ता मरणान्तं च जीवितम्॥",
+          translation:
+            "सभी संग्रहों का अंत विनाश है, सभी ऊँचाइयों का अंत पतन है, सभी संयोगों का अंत वियोग है, और जीवन का अंत मरण है (इसे स्वीकार कर आसक्ति छोड़ें)।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "वाल्मीकि रामायण, अयोध्या काण्ड 105.21",
+          shloka:
+            "अहोरात्राणि गच्छन्ति सर्वेषां प्राणिनामिह।\nआयूंषि क्षपयन्त्याशु ग्रीष्मे जलमिवांशवः॥",
+          translation:
+            "संसार में सभी प्राणियों के दिन और रात व्यतीत हो रहे हैं, और वे आयु को उसी तरह तेजी से घटा रहे हैं जैसे ग्रीष्म ऋतु में सूर्य की किरणें जल को सुखा देती हैं।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "रामचरितमानस, अयोध्याकाण्ड, दोहा 171 चौपाई",
+          shloka:
+            "सुनहु भरत भावी प्रवल बिलखि कहेउ मुनिनाथ।\nहानि लाभु जीवनु मरनु जसु अपजसु बिधि हाथ॥",
+          translation:
+            "मुनिनाथ (वशिष्ठ जी) ने बिलखकर (दुखी होकर) कहा—हे भरत! सुनो, होनहार (भाग्य) बहुत बलवान है। हानि-लाभ, जीवन-मरण, और यश-अपयश—यह सब विधाता के ही हाथ में है (अतः इसे स्वीकार करना चाहिए)।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "महाभारत, शान्ति पर्व 174.17",
+          shloka:
+            "अदर्शनादापतिताः पुनश्चादर्शनं गताः।\nन ते तव न तेषां त्वं तत्र का परिदेवना॥",
+          translation:
+            "सभी प्राणी अदर्शन (अदृश्य जगत) से आए हैं और पुनः अदर्शन में ही चले जाएंगे। न वे तुम्हारे हैं और न तुम उनके हो, फिर इसमें विलाप (दुःख) कैसा?",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "महाभारत, शान्ति पर्व 330.16",
+          shloka:
+            "यच्च कामसुखं लोके यच्च दिव्यं महत्सुखम्।\nतृष्णाक्षयसुखस्यैते नार्हतः षोडशीं कलाम्॥",
+          translation:
+            "इस संसार में जो भी काम-सुख (भौतिक सुख) है, और स्वर्ग में जो भी महान सुख है—वे दोनों ही तृष्णा (लालसा) के नष्ट होने से मिलने वाले सुख की सोलहवीं कला के बराबर भी नहीं हैं।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "चाणक्य नीति 13.1",
+          shloka:
+            "आयुः कर्म च वित्तं च विद्या निधनमेव च।\nपञ्चैतान्यपि सृज्यन्ते गर्भस्थस्यैव देहिनः॥",
+          translation:
+            "आयु, कर्म, धन, विद्या और मृत्यु—ये पाँच चीजें मनुष्य के गर्भ में रहते समय ही विधाता द्वारा निश्चित कर दी जाती हैं (अतः जो प्राप्त है, उसे स्वीकार करें)।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "महाभारत, अनुशासन पर्व 7.22 (चाणक्य नीति में भी प्रचलित)",
+          shloka:
+            "यथा धेनुसहस्रेषु वत्सो विन्दति मातरम्।\nतथा पूर्वकृतं कर्म कर्तारमनुगच्छति॥",
+          translation:
+            "जिस प्रकार हजारों गायों के बीच भी बछड़ा अपनी माँ को ढूँढ ही लेता है, उसी प्रकार पूर्व जन्मों में किया गया कर्म कर्ता (करने वाले) को ढूँढ ही लेता है (कर्मफल की स्वीकृति)।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "कबीर दोहा",
+          shloka:
+            "पानी केरा बुदबुदा, अस मानुस की जात।\nदेखत ही छिप जाएगा, ज्यों तारा परभात॥",
+          translation:
+            "मनुष्य का जीवन पानी के बुलबुले के समान है। जैसे सुबह होते ही तारे छिप जाते हैं, वैसे ही यह शरीर भी देखते-देखते एक दिन नष्ट हो जाएगा (इसलिए मोह त्याग दें)।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "कबीर दोहा",
+          shloka:
+            "मेरा मुझमें कुछ नहीं, जो कुछ है सो तोर।\nतेरा तुझको सौंपते, क्या लागै है मोर॥",
+          translation:
+            "हे ईश्वर! मेरे भीतर मेरा अपना कुछ भी नहीं है, मेरे पास जो कुछ भी है, वह सब तुम्हारा ही दिया हुआ है। तुम्हारी वस्तु तुम्हें ही सौंपने में मेरा क्या लगता है (अहंकार का त्याग)।",
+        },
+        {
+          topic: "Letting Go & Acceptance",
+          reference: "कबीर दोहा",
+          shloka:
+            "माटी कहे कुम्हार से, तू क्या रोंदे मोय।\nएक दिन ऐसा आएगा, मैं रोंदूंगी तोय॥",
+          translation:
+            "मिट्टी कुम्हार से कहती है कि आज तू मुझे अपने पैरों से रौंद रहा है, लेकिन एक दिन ऐसा आएगा जब मैं तुझे रौंदूँगी (अर्थात मृत्यु के बाद शरीर मिट्टी में ही मिल जाएगा)।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "श्रीमद्भगवद्गीता 2.66",
+          shloka:
+            "नास्ति बुद्धिरयुक्तस्य न चायुक्तस्य भावना।\nन चाभावयतः शान्तिरशान्तस्य कुतः सुखम्॥",
+          translation:
+            "जिसने मन और इन्द्रियों को नहीं जीता है, उस अयुक्त पुरुष में निश्चयात्मिका बुद्धि नहीं होती और उसके मन में कर्तव्य-अकर्तव्य की भावना भी नहीं होती। भावनाहीन मनुष्य को शांति नहीं मिलती, और शांतिरहित मनुष्य को सुख कैसे मिल सकता है?",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "श्रीमद्भगवद्गीता 2.70",
+          shloka:
+            "आपूर्यमाणमचलप्रतिष्ठं समुद्रमापः प्रविशन्ति यद्वत्।\nतद्वत्कामा यं प्रविशन्ति सर्वे स शान्तिमाप्नोति न कामकामी॥",
+          translation:
+            "जैसे सब ओर से जल से भरे हुए और अचल प्रतिष्ठा वाले समुद्र में नदियाँ आकर मिलती हैं, फिर भी समुद्र विचलित नहीं होता; वैसे ही जिस पुरुष में सभी भोग विकार उत्पन्न किए बिना प्रवेश करते हैं (विलीन हो जाते हैं), वही शांति प्राप्त करता है, भोगों की कामना करने वाला नहीं।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "श्रीमद्भगवद्गीता 5.29",
+          shloka:
+            "भोक्तारं यज्ञतपसां सर्वलोकमहेश्वरम्।\nसुहृदं सर्वभूतानां ज्ञात्वा मां शान्तिमृच्छति॥",
+          translation:
+            "जो मुझ परमेश्वर को सभी यज्ञों और तपों का भोक्ता, सम्पूर्ण लोकों का महान ईश्वर तथा सम्पूर्ण प्राणियों का निःस्वार्थ प्रेमी (सुहृद) जानता है, वह शांति को प्राप्त होता है।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "श्रीमद्भगवद्गीता 4.39",
+          shloka:
+            "श्रद्धावाँल्लभते ज्ञानं तत्परः संयतेन्द्रियः।\nज्ञानं लब्ध्वा परां शान्तिमचिरेणाधिगच्छति॥",
+          translation:
+            "श्रद्धावान् पुरुष, जो इन्द्रियों को वश में किए हुए है और ज्ञान प्राप्ति के लिए तत्पर है, वह ज्ञान प्राप्त करता है। ज्ञान प्राप्त करके वह शीघ्र ही परम शांति को प्राप्त हो जाता है।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "श्रीमद्भगवद्गीता 6.7",
+          shloka:
+            "जितात्मनः प्रशान्तस्य परमात्मा समाहितः।\nशीतोष्णसुखदुःखेषु तथा मानापमानयोः॥",
+          translation:
+            "जिसने मन और इन्द्रियों को जीत लिया है और जो परम शांत है, ऐसे पुरुष के अन्तःकरण में परमात्मा सदा स्थित रहते हैं; और उसे सर्दी-गर्मी, सुख-दुःख तथा मान-अपमान सभी स्थितियों में समता (शांति) बनी रहती है।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "कठोपनिषद् 2.2.13",
+          shloka:
+            "नित्योऽनित्यानां चेतनश्चेतनानामेको बहूनां यो विदधाति कामान्।\nतमात्मस्थं येऽनुपश्यन्ति धीरास्तेषां शान्तिः शाश्वती नेतरेषाम्॥",
+          translation:
+            "जो अनित्यों में नित्य है, चेतनों में चेतन है, जो एक होते हुए भी बहुतों की कामनाएं पूरी करता है; उस अपनी आत्मा में स्थित परमात्मा को जो धीर पुरुष देखते हैं, उन्हीं को शाश्वत (सदा रहने वाली) शांति मिलती है, दूसरों को नहीं।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "यजुर्वेद 36.17 (शांति पाठ)",
+          shloka:
+            "द्यौः शान्तिरन्तरिक्षं शान्तिः पृथिवी शान्तिरापः शान्तिरोषधयः शान्तिः।\nवनस्पतयः शान्तिर्विश्वेदेवाः शान्तिर्ब्रह्म शान्तिः सर्वं शान्तिः शान्तिरेव शान्तिः सा मा शान्तिरेधि॥",
+          translation:
+            "द्युलोक में शांति हो, अंतरिक्ष में शांति हो, पृथ्वी पर शांति हो, जल में शांति हो, औषधियां शांतिदायक हों। वनस्पतियाँ शांति दें, सभी देवता शांति दें, ब्रह्म शांत हो, सब ओर शांति हो, केवल शांति ही शांति हो। वह शांति मुझे भी प्राप्त हो।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "अथर्ववेद 19.9.1",
+          shloka:
+            "शान्ता द्यौः शान्ता पृथिवी शान्तमिदमुर्वन्तरिक्षम्।\nशान्ता उदन्वतीरापः शान्ता नः सन्त्वोषधीः॥",
+          translation:
+            "हमारे लिए द्युलोक शांत (अनुकूल) हो, पृथ्वी शांत हो, यह विशाल अंतरिक्ष शांत हो। जल धारण करने वाले समुद्र और नदियाँ शांत हों, तथा सभी औषधियाँ हमारे लिए शांतिदायक हों।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "महाभारत, उद्योग पर्व (विदुर नीति) 33.48",
+          shloka:
+            "क्षमा वशीकृतिर्लोके क्षमया किं न साध्यते।\nशान्तिखड्गः करे यस्य किं करिष्यति दुर्जनः॥",
+          translation:
+            "संसार में क्षमा सबसे बड़ा वशीकरण है, क्षमा से क्या सिद्ध नहीं किया जा सकता? जिसके हाथ में शांति रूपी तलवार है, दुर्जन उसका क्या बिगाड़ सकता है?",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "महाभारत, शान्ति पर्व 175.35",
+          shloka:
+            "अकिञ्चनस्य शुद्धस्य शान्तस्य निहताशिषः।\nदेवासुरमनुष्येषु न पश्यामि समं सुखम्॥",
+          translation:
+            "जिसके पास कुछ नहीं है (अकिंचन), जो भीतर से शुद्ध है, शांत है और जिसने सभी कामनाओं का नाश कर दिया है—उसके समान सुख मैं देवताओं, असुरों और मनुष्यों में कहीं नहीं देखता।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "चाणक्य नीति 8.13",
+          shloka:
+            "शान्तितुल्यं तपो नास्ति न सन्तोषात् परं सुखम्।\nन तृष्णया परो व्याधिर्न च धर्मो दयापरः॥",
+          translation:
+            "शांति के समान कोई तपस्या नहीं है, संतोष से बढ़कर कोई सुख नहीं है। लालच (तृष्णा) से बड़ा कोई रोग नहीं है और दया से बढ़कर कोई धर्म नहीं है।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "चाणक्य नीति 11.10",
+          shloka:
+            "सन्तोषामृततृप्तानां यत्सुखं शान्तिरेव च।\nन च तद्धनलुब्धानामितश्चेतश्च धावताम्॥",
+          translation:
+            "संतोष रूपी अमृत से तृप्त मनुष्यों को जो सुख और शांति प्राप्त होती है, वह सुख धन के लालच में यहाँ-वहाँ भटकने वाले लोगों को कभी नहीं मिल सकता।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "रामचरितमानस, बालकाण्ड, दोहा 39 चौपाई",
+          shloka: "जहँ सुमति तहँ संपति नाना। जहँ कुमति तहँ बिपति निदाना॥",
+          translation:
+            "जहाँ सुमति (सद्बुद्धि और शांतिपूर्ण विचार) होती है, वहाँ नाना प्रकार की संपत्तियाँ (सुख-समृद्धि) निवास करती हैं। और जहाँ कुमति (दुर्बुद्धि और कलह) होती है, वहाँ अंततः विपत्ति ही आती है।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "तुलसीदास दोहा",
+          shloka:
+            "तुलसी मीठे बचन ते, सुख उपजत चहुँ ओर।\nबसीकरन इक मंत्र है, परिहरू बचन कठोर॥",
+          translation:
+            "गोस्वामी तुलसीदास जी कहते हैं कि मीठे वचन बोलने से चारों ओर सुख और शांति फैलती है। यह सबको वश में करने का एक अचूक मंत्र है, इसलिए कठोर वचनों को त्याग देना चाहिए।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "कबीर दोहा",
+          shloka:
+            "गोधन गजधन बाजिधन, और रतन धन खान।\nजब आवे सन्तोष धन, सब धन धूरि समान॥",
+          translation:
+            "गायों का धन, हाथियों का धन, घोड़ों का धन और रत्नों की खानें ही क्यों न हों; जब व्यक्ति को 'संतोष' रूपी धन (परम शांति) प्राप्त हो जाता है, तो यह सभी सांसारिक धन धूल के समान लगने लगते हैं।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "कबीर दोहा",
+          shloka:
+            "कबीरा जहँ ज्ञान तहाँ धरम है, जहँ झूठ तहाँ पाप।\nजहँ लोभ तहाँ काल है, जहँ छमा तहाँ आप॥",
+          translation:
+            "कबीर दास जी कहते हैं कि जहाँ ज्ञान है, वहाँ धर्म है; जहाँ झूठ है, वहाँ पाप है; जहाँ लोभ है, वहाँ मृत्यु है; और जहाँ क्षमा (शांति) है, वहाँ स्वयं परमात्मा का निवास है।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "कबीर दोहा",
+          shloka:
+            "जब मैं था तब हरि नहीं, अब हरि हैं मैं नाहिं।\nसब अँधियारा मिटि गया, जब दीपक देख्या माहिं॥",
+          translation:
+            "जब मेरे भीतर 'मैं' (अहंकार) था, तब ईश्वर नहीं थे। अब हृदय में ईश्वर हैं, तो अहंकार नहीं है। जब मैंने ज्ञान का दीपक अपने भीतर देखा, तो अज्ञान और अशांति का सारा अंधेरा मिट गया।",
+        },
+        {
+          topic: "Peace & Inner Calm",
+          reference: "कबीर दोहा",
+          shloka:
+            "रुखा सुखा खाय के, ठण्डा पानी पीउ।\nदेख पराई चूपड़ी, मत ललचावै जीउ॥",
+          translation:
+            "जो भी रूखा-सूखा अन्न मिले, उसे खाकर और ठंडा पानी पीकर संतोष (शांति) करना चाहिए। दूसरों की चुपड़ी (घी लगी) रोटी देखकर अपने मन को नहीं ललचाना चाहिए (यही शांति का रहस्य है)।",
+        },
+      ];
+
+      // ==========================================
+      // LOGIC & ANIMATION
+      // ==========================================
+      function openPandulipi(mood) {
+        const filtered = shlokasData.filter((item) => item.topic === mood);
+        if (filtered.length === 0) return alert("No shlokas found!");
+
+        const randomShloka =
+          filtered[Math.floor(Math.random() * filtered.length)];
+
+        document.getElementById("shloka-element").innerText =
+          randomShloka.shloka;
+        document.getElementById("ref-element").innerText =
+          "- " + randomShloka.reference;
+        document.getElementById("trans-element").innerText =
+          randomShloka.translation;
+
+        document.getElementById("ui-container").classList.add("hidden");
+        const scene = document.getElementById("scene");
+        const bundle = document.getElementById("pandulipi");
+
+        scene.style.display = "flex";
+        setTimeout(() => {
+          scene.classList.add("visible");
+          setTimeout(() => {
+            bundle.classList.add("open");
+          }, 400);
+        }, 50);
+      }
+
+      function closePandulipi() {
+        const bundle = document.getElementById("pandulipi");
+        const scene = document.getElementById("scene");
+
+        bundle.classList.remove("open");
+        setTimeout(() => {
+          scene.classList.remove("visible");
+          setTimeout(() => {
+            scene.style.display = "none";
+            document.getElementById("ui-container").classList.remove("hidden");
+          }, 1000);
+        }, 1200);
+      }
+
+      // ==========================================
+      // DIVINE PARTICLES
+      // ==========================================
+      const canvas = document.getElementById("canvas-bg");
+      const ctx = canvas.getContext("2d");
+      let particles = [];
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.size = Math.random() * 2 + 0.5;
+          this.speedY = Math.random() * 0.4 + 0.1;
+          this.opacity = Math.random() * 0.5 + 0.1;
+        }
+        update() {
+          this.y -= this.speedY;
+          if (this.y < 0) {
+            this.y = canvas.height;
+            this.x = Math.random() * canvas.width;
+          }
+        }
+        draw() {
+          ctx.fillStyle = `rgba(212, 175, 55, ${this.opacity})`;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function initParticles() {
+        particles = [];
+        for (let i = 0; i < 150; i++) particles.push(new Particle());
+      }
+
+      function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p) => {
+          p.update();
+          p.draw();
+        });
+        requestAnimationFrame(animateParticles);
+      }
+
+      initParticles();
+      animateParticles();
+    </script>
+  </body>
+</html>
